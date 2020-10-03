@@ -1,0 +1,37 @@
+{
+  "name": "auth-implementation",
+  "version": "1.0.0",
+  "description": "web auth Implementation in express node.",
+  "main": "app.js",
+  "scripts": {
+    "start": "node ./bin/www",
+    "dev": "nodemon ./bin/www"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rajeshmule/auth-Implementation.git"
+  },
+  "keywords": [
+    "express",
+    "node",
+    "auth"
+  ],
+  "author": "Rajesh Mule",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rajeshmule/auth-Implementation/issues"
+  },
+  "homepage": "https://github.com/rajeshmule/auth-Implementation#readme",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "connect-mongo": "^3.2.0",
+    "cookie-parser": "^1.4.5",
+    "debug": "^4.2.0",
+    "ejs": "^3.1.5",
+    "express": "^4.17.1",
+    "express-session": "^1.17.1",
+    "http-errors": "^1.8.0",
+    "mongoose": "^5.10.7",
+    "morgan": "^1.10.0"
+  }
+}
