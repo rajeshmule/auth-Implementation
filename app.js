@@ -13,7 +13,7 @@ var usersRouter = require('./routes/users.route');
 var dashboardRouter = require('./routes/dashboard.route');
 var auth = require('./middleware/auth');
 
-const mongodbUrl = process.env.MONGODB_URI || 'mongodb://localhost:27017/userAuth';
+const mongodbUrl = process.env.MONGODB_ADDON_URI || 'mongodb://localhost:27017/userAuth';
 
 //connect mongodb 
 mongoose.connect(mongodbUrl, {
