@@ -1,93 +1,79 @@
-#!/usr/bin/env node
 
-/**
- * Module dependencies.
- */
+var createError = require('http-errors');
+var express = require('express');
+var path = require('path');
+var cookieParser = require('cookie-parser');
+var logger = require('morgan');
+const mongoose = require('mongoose');
+const session = require('express-session');
+const MongoStore = require('connect-mongo')(session);
 
-var app = require('./app');
-var debug = require('debug')('userauth:server');
-var http = require('http');
+var indexRouter = require('./routes/index');
+var usersRouter = require('./routes/users.route');
+var dashboardRouter = require('./routes/dashboard.route');
+var auth = require('./middleware/auth');
 
-/**
- * Get port from environment and store in Express.
- */
+const mongodbUrl = process.env.MONGODB_ADDON_URI || 'mongodb://localhost:27017/userAuth';
 
-var port = normalizePort(process.env.PORT || '3000');
-app.set('port', port);
-
-/**
- * Create HTTP server.
- */
-
-var server = http.createServer(app);
-
-/**
- * Listen on provided port, on all network interfaces.
- */
-
-server.listen(port);
-server.on('error', onError);
-server.on('listening', onListening);
-
-/**
- * Normalize a port into a number, string, or false.
- */
-
-function normalizePort(val)
+//connect mongodb 
+mongoose.connect(mongodbUrl, {
+  useCreateIndex: true,
+  useUnifiedTopology: true,
+  useNewUrlParser: true,
+  useFindAndModify: false,
+  serverSelectionTimeoutMS: 5000
+}, () =>
 {
-  var port = parseInt(val, 10);
+  console.log("mongodb is connected");
+});
 
-  if (isNaN(port)) {
-    // named pipe
-    return val;
-  }
+var app = express();
+const port = process.env.PORT || 3000;
 
-  if (port >= 0) {
-    // port number
-    return port;
-  }
+// view engine setup
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'ejs');
 
-  return false;
-}
+app.use(logger('dev'));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
+app.use(express.static(path.join(__dirname, 'public')));
 
-/**
- * Event listener for HTTP server "error" event.
- */
+// app.use()
+//use sessions for tracking logins
+app.use(session({
+  secret: 'work hard dream big never give up',
+  resave: false,
+  saveUninitialized: true,
+  store: new MongoStore({ mongooseConnection: mongoose.connection })
+}));
 
-function onError(error)
+app.use(auth.userLoggedSession);
+
+app.use('/', indexRouter);
+app.use('/users', usersRouter);
+app.use('/dashboard', auth.isUserLogged, dashboardRouter);
+
+// catch 404 and forward to error handler
+app.use(function (req, res, next)
 {
-  if (error.syscall !== 'listen') {
-    throw error;
-  }
+  console.log("inside err 404");
+  next(createError(404));
+});
 
-  var bind = typeof port === 'string'
-    ? 'Pipe ' + port
-    : 'Port ' + port;
-
-  // handle specific listen errors with friendly messages
-  switch (error.code) {
-    case 'EACCES':
-      console.error(bind + ' requires elevated privileges');
-      process.exit(1);
-      break;
-    case 'EADDRINUSE':
-      console.error(bind + ' is already in use');
-      process.exit(1);
-      break;
-    default:
-      throw error;
-  }
-}
-
-/**
- * Event listener for HTTP server "listening" event.
- */
-
-function onListening()
+// error handler
+app.use(function (err, req, res, next)
 {
-  var addr = server.address();
-  var bind = typeof addr === 'string'
-    ? 'pipe ' + addr
-    : 'port ' + addr.port;
-  debug('Listening on ' + bind);
-}
+  // set locals, only providing error in development
+  console.log("inside err 500");
+  res.locals.message = err.message;
+  res.locals.error = req.app.get('env') === 'development' ? err : {};
+  // render the error page
+  res.status(err.status || 500);
+  res.render('error');
+});
+
+app.listen(port, () => {
+  console.log(`Server listening on port ${port}`)
+})
