@@ -9,7 +9,7 @@
   },
   "engines": {
     "node": "^10"
-  },    
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/rajeshmule/auth-Implementation.git"
