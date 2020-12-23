@@ -1,4 +1,6 @@
 const Users = require('../models/user.model');
+const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
 
 exports.signUpForm = (req, res) => {
 	res.render('signUp');
@@ -24,16 +26,9 @@ exports.signIn = async (req, res, next) => {
 		if (!user) return next(error);
 		const isMatch = await user.verifyPassword(password);
 		if (!isMatch) return next(error);
-		console.log(
-			'inside signin before push user.id into session => ',
-			req.session.userId,
-		);
+
 		// log the user in by adding user's id  it to session
 		req.session.userId = user.id;
-		console.log(
-			'inside signin after push user.id into session => ',
-			req.session.userId,
-		);
 
 		res.redirect('/dashboard');
 	} catch (error) {
@@ -52,5 +47,75 @@ exports.logout = (req, res, next) => {
 				return res.redirect('/');
 			}
 		});
+	}
+};
+
+exports.renderForgotPassword = (req, res) => {
+	res.render('forgot-password');
+};
+
+exports.forgotPassword = async (req, res, next) => {
+	const email = req.body.email;
+	const buffer = await crypto.randomBytes(32);
+	const token = buffer.toString('hex');
+
+	try {
+		const requestedUser = await Users.findOne({ email });
+		if (!requestedUser) throw new Error('Enter Correct email id.');
+		const updateUser = await Users.findByIdAndUpdate(
+			{ _id: requestedUser._id },
+			{
+				resetPasswordToken: token,
+				resetPasswordExpires: Date.now() + 3600000, // 1hour
+			},
+			{ upsert: true, new: true },
+		);
+
+		const passwordResetUrl = `${req.headers.origin}/users/password-reset/${updateUser.resetPasswordToken}`;
+		console.log(passwordResetUrl);
+	} catch (error) {
+		next(error);
+	}
+};
+
+exports.renderResetPassword = (req, res) => {
+	res.render('reset-password', { token: req.params.token });
+};
+
+exports.resetPassword = async (req, res, next) => {
+	console.log('token', req.params.token);
+	const token = req.params.token;
+	try {
+		user = await Users.findOne({
+			resetPasswordToken: token,
+			resetPasswordExpires: {
+				$gt: Date.now(),
+			},
+		});
+		console.log(user.id);
+
+		if (!user) throw new Error('User Not Found.');
+
+		if (req.body.newPassword === req.body.verifyPassword) {
+			console.log(req.body.newPassword, req.body.verifyPassword, 'true');
+			var hashPassword = bcrypt.hashSync(req.body.newPassword, 10);
+			const updateUser = await Users.findByIdAndUpdate(
+				{ _id: user.id },
+				{
+					password: hashPassword,
+					resetPasswordToken: undefined,
+					resetPasswordExpires: undefined,
+				},
+				{ upsert: true, new: true },
+			);
+			console.log(updateUser);
+			if (!updateUser) {
+				throw new Error('not reset.');
+			} else {
+				res.redirect('/users/signin');
+			}
+		}
+	} catch (error) {
+		next(error);
 	}
 };
