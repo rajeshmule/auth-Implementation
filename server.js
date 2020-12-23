@@ -6,11 +6,14 @@ var logger = require('morgan');
 const mongoose = require('mongoose');
 const session = require('express-session');
 const MongoStore = require('connect-mongo')(session);
+const dotenv = require('dotenv');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users.route');
 var dashboardRouter = require('./routes/dashboard.route');
 var auth = require('./middleware/auth');
+
+dotenv.config();
 
 const mongodbUrl =
 	process.env.MONGODB_ADDON_URI || 'mongodb://localhost:27017/userAuth';
@@ -47,7 +50,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 //use sessions for tracking logins
 app.use(
 	session({
-		secret: 'work hard dream big never give up',
+		secret: process.env.SECRET,
 		resave: false,
 		saveUninitialized: true,
 		store: new MongoStore({ mongooseConnection: mongoose.connection }),

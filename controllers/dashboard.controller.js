@@ -2,7 +2,7 @@
 
 exports.getDashboard = (req, res) =>
 {
-    console.log("inside get dashboard");
+    // console.log("inside get dashboard");
     // basic authorization
     // if (req.session && req.session.userId) {
     //     res.render('dashbord')

@@ -1,6 +1,17 @@
 const Users = require('../models/user.model');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
+var nodemailer = require('nodemailer');
+const dotenv = require('dotenv');
+dotenv.config();
+
+var transporter = nodemailer.createTransport({
+	service: 'gmail',
+	auth: {
+		user: process.env.EMAIL,
+		pass: process.env.PASSWORD,
+	},
+});
 
 exports.signUpForm = (req, res) => {
 	res.render('signUp');
@@ -72,7 +83,20 @@ exports.forgotPassword = async (req, res, next) => {
 		);
 
 		const passwordResetUrl = `${req.headers.origin}/users/password-reset/${updateUser.resetPasswordToken}`;
-		console.log(passwordResetUrl);
+		// console.log(passwordResetUrl);
+
+		var mailOptions = {
+			from: process.env.EMAIL,
+			to: email,
+			subject: 'password resety foryour account.',
+			text: `You requested for a password reset, kindly use this ${passwordResetUrl}`,
+		};
+
+		let info = await transporter.sendMail(mailOptions);
+		// console.log(info.accepted);
+		if (info.accepted == email) {
+			res.render('resetLinkSend', { email: email });
+		}
 	} catch (error) {
 		next(error);
 	}
@@ -83,7 +107,7 @@ exports.renderResetPassword = (req, res) => {
 };
 
 exports.resetPassword = async (req, res, next) => {
-	console.log('token', req.params.token);
+	// console.log('token', req.params.token);
 	const token = req.params.token;
 	try {
 		user = await Users.findOne({
@@ -92,12 +116,12 @@ exports.resetPassword = async (req, res, next) => {
 				$gt: Date.now(),
 			},
 		});
-		console.log(user.id);
+		// console.log(user.id);
 
 		if (!user) throw new Error('User Not Found.');
 
 		if (req.body.newPassword === req.body.verifyPassword) {
-			console.log(req.body.newPassword, req.body.verifyPassword, 'true');
+			// console.log(req.body.newPassword, req.body.verifyPassword, 'true');
 			var hashPassword = bcrypt.hashSync(req.body.newPassword, 10);
 			const updateUser = await Users.findByIdAndUpdate(
 				{ _id: user.id },
@@ -108,7 +132,7 @@ exports.resetPassword = async (req, res, next) => {
 				},
 				{ upsert: true, new: true },
 			);
-			console.log(updateUser);
+			// console.log(updateUser);
 			if (!updateUser) {
 				throw new Error('not reset.');
 			} else {
