@@ -9,7 +9,7 @@
   },
   "engines": {
     "node": "^10"
-  },    
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/rajeshmule/auth-Implementation.git"
@@ -30,11 +30,13 @@
     "connect-mongo": "^3.2.0",
     "cookie-parser": "^1.4.5",
     "debug": "^4.2.0",
+    "dotenv": "^8.2.0",
     "ejs": "^3.1.5",
     "express": "^4.17.1",
     "express-session": "^1.17.1",
     "http-errors": "^1.8.0",
     "mongoose": "^5.10.7",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "nodemailer": "^6.4.17"
   }
 }
